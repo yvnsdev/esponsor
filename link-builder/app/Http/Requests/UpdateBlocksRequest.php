@@ -25,7 +25,7 @@ class UpdateBlocksRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'blocks' => ['required', 'array'],
+            'blocks' => ['present', 'array'],
             'blocks.*.id' => ['required', 'string'],
             'blocks.*.type' => ['required', 'string', function ($attribute, $value, $fail) {
                 if (!BlockRegistry::typeExists($value)) {
@@ -43,7 +43,7 @@ class UpdateBlocksRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'blocks.required' => 'Blocks array is required.',
+            'blocks.present' => 'Blocks array must be present.',
             'blocks.array' => 'Blocks must be an array.',
             'blocks.*.id.required' => 'Each block must have an ID.',
             'blocks.*.type.required' => 'Each block must have a type.',
@@ -71,6 +71,11 @@ class UpdateBlocksRequest extends FormRequest
     public function getValidatedBlocks(): array
     {
         $blocks = $this->validated()['blocks'];
+        
+        // If blocks array is empty, return it as is (valid case)
+        if (empty($blocks)) {
+            return [];
+        }
         
         // Additional validation: ensure each block follows the contract
         foreach ($blocks as $index => $block) {

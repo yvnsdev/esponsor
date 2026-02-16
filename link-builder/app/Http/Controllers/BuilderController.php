@@ -60,7 +60,7 @@ class BuilderController extends Controller
         // Update blocks in the draft page
         $draftPage->update(['blocks' => $blocks]);
         
-        return redirect()->back()->with('success', 'Blocks updated successfully.');
+        return redirect()->back();
     }
 
     /**
@@ -93,7 +93,7 @@ class BuilderController extends Controller
         // Clear cache
         Cache::forget("public:site:{$site->slug}:published");
         
-        return redirect()->back()->with('success', 'Profile updated successfully.');
+        return redirect()->back();
     }
 
     /**
@@ -142,7 +142,6 @@ class BuilderController extends Controller
         $publicUrl = route('public.page', ['slug' => $site->slug]);
         
         return redirect()->back()->with([
-            'publishSuccess' => 'Page published successfully!',
             'publicUrl' => $publicUrl,
         ]);
     }

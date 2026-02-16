@@ -34,7 +34,6 @@ const props = defineProps({
 
 // Get flash messages from Inertia
 const page = usePage();
-const publishSuccess = computed(() => page.props.flash?.publishSuccess || null);
 const publishError = computed(() => page.props.flash?.publishError || null);
 
 // Block management
@@ -256,13 +255,7 @@ watch(selectedBlockId, (newId) => {
         </div>
 
         <!-- Flash Messages -->
-        <div v-if="publishSuccess || publishError" class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div v-if="publishSuccess" class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl flex items-start gap-3">
-                <Check class="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <div class="flex-1">
-                    <p class="font-medium">{{ publishSuccess }}</p>
-                </div>
-            </div>
+        <div v-if="publishError" class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div v-if="publishError" class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex items-start gap-3">
                 <AlertCircle class="w-5 h-5 flex-shrink-0 mt-0.5" />
                 <div class="flex-1">

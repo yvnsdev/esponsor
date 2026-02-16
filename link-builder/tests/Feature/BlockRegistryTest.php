@@ -11,11 +11,13 @@ class BlockRegistryTest extends TestCase
     {
         $schemas = BlockRegistry::getAllSchemas();
         
-        $this->assertCount(4, $schemas);
+        $this->assertCount(6, $schemas);
         $this->assertArrayHasKey('text', $schemas);
         $this->assertArrayHasKey('links', $schemas);
         $this->assertArrayHasKey('image', $schemas);
         $this->assertArrayHasKey('video', $schemas);
+        $this->assertArrayHasKey('social-icons', $schemas);
+        $this->assertArrayHasKey('cta', $schemas);
     }
 
     public function test_can_get_schema_by_type()
@@ -44,7 +46,7 @@ class BlockRegistryTest extends TestCase
     {
         $catalog = BlockRegistry::getCatalog();
         
-        $this->assertCount(4, $catalog);
+        $this->assertCount(6, $catalog);
         
         foreach ($catalog as $item) {
             $this->assertArrayHasKey('type', $item);

@@ -96,13 +96,7 @@ class BuilderControllerTest extends TestCase
                 'blocks' => $blocks
             ]);
 
-        $response->assertStatus(200);
-        $response->assertJson([
-            'message' => 'Blocks updated successfully.',
-            'data' => [
-                'blocksCount' => 2
-            ]
-        ]);
+        $response->assertStatus(302);
 
         // Check that blocks were saved
         $draftPage->refresh();
@@ -168,5 +162,29 @@ class BuilderControllerTest extends TestCase
         ]);
 
         $response->assertStatus(401);
+    }
+
+    public function test_update_blocks_accepts_empty_array()
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['user_id' => $user->id]);
+        $draftPage = Page::factory()->create([
+            'site_id' => $site->id,
+            'status' => 'draft',
+            'blocks' => [BlockRegistry::createNewBlock('text')]
+        ]);
+
+        // Delete all blocks (send empty array)
+        $response = $this->actingAs($user)
+            ->patchJson('/dashboard/builder/blocks', [
+                'blocks' => []
+            ]);
+
+        $response->assertStatus(302);
+        
+        // Check that blocks were cleared
+        $draftPage->refresh();
+        $this->assertCount(0, $draftPage->blocks);
+        $this->assertEquals([], $draftPage->blocks);
     }
 }

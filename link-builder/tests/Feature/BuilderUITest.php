@@ -77,13 +77,7 @@ class BuilderUITest extends TestCase
                 'blocks' => [$newBlock]
             ]);
 
-        $response->assertStatus(200);
-        $response->assertJson([
-            'message' => 'Blocks updated successfully.',
-            'data' => [
-                'blocksCount' => 1
-            ]
-        ]);
+        $response->assertStatus(302);
 
         // Verify block was saved
         $draftPage->refresh();
@@ -116,7 +110,7 @@ class BuilderUITest extends TestCase
                 'blocks' => $reorderedBlocks
             ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(302);
         
         $draftPage->refresh();
         $this->assertEquals($linksBlock['id'], $draftPage->blocks[0]['id']);
@@ -143,7 +137,7 @@ class BuilderUITest extends TestCase
                 'blocks' => [$textBlock]
             ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(302);
         
         $draftPage->refresh();
         $this->assertFalse($draftPage->blocks[0]['enabled']);

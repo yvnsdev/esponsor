@@ -11,7 +11,6 @@ export function useBlockManager(initialBlocks, schemas, catalog = null) {
     // Publishing state
     const isPublishing = ref(false);
     const publishError = ref(null);
-    const publishSuccess = ref(null);
 
     // Undo/Redo system
     const history = ref([JSON.stringify(initialBlocks)]);
@@ -140,6 +139,10 @@ export function useBlockManager(initialBlocks, schemas, catalog = null) {
         if (selectedBlockId.value === blockId) {
             selectedBlockId.value = null;
         }
+        // Also clear selection if no blocks remain
+        if (blocks.value.length === 0) {
+            selectedBlockId.value = null;
+        }
         addToHistory();
         hasUnsavedChanges.value = true;
         debouncedSave();
@@ -266,7 +269,6 @@ export function useBlockManager(initialBlocks, schemas, catalog = null) {
         try {
             isPublishing.value = true;
             publishError.value = null;
-            publishSuccess.value = null;
             
             const response = await new Promise((resolve, reject) => {
                 router.post('/dashboard/builder/publish', {}, {
@@ -281,7 +283,6 @@ export function useBlockManager(initialBlocks, schemas, catalog = null) {
                 });
             });
             
-            publishSuccess.value = 'Page published successfully!';
             return true;
         } catch (error) {
             publishError.value = error.message || 'Error publishing page. Please try again.';
@@ -295,7 +296,6 @@ export function useBlockManager(initialBlocks, schemas, catalog = null) {
     // Clear publish messages
     const clearPublishMessages = () => {
         publishError.value = null;
-        publishSuccess.value = null;
     };
 
     return {
@@ -314,7 +314,6 @@ export function useBlockManager(initialBlocks, schemas, catalog = null) {
         canPublish,
         isPublishing,
         publishError,
-        publishSuccess,
         canUndo,
         canRedo,
         undo,
