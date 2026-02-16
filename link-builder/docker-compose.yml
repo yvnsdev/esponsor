@@ -1,0 +1,137 @@
+services:
+  # ==========================================================================
+  # PHP Application (Laravel)
+  # ==========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: linkbuilder-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    environment:
+      - PHP_OPCACHE_ENABLE=1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - linkbuilder
+
+  # ==========================================================================
+  # Nginx Web Server
+  # ==========================================================================
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: linkbuilder-nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - .:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - linkbuilder
+
+  # ==========================================================================
+  # MySQL Database
+  # ==========================================================================
+  db:
+    image: mysql:8.0
+    container_name: linkbuilder-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-linkbuilder}
+      MYSQL_USER: ${DB_USERNAME:-linkbuilder}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+    ports:
+      - "${DB_EXTERNAL_PORT:-3307}:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootsecret}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - linkbuilder
+
+  # ==========================================================================
+  # Redis (Cache & Queue)
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: linkbuilder-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_EXTERNAL_PORT:-6380}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - linkbuilder
+
+  # ==========================================================================
+  # Queue Worker
+  # ==========================================================================
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: linkbuilder-queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - linkbuilder
+
+  # ==========================================================================
+  # Node.js (Vite dev server - development only)
+  # ==========================================================================
+  node:
+    image: node:20-alpine
+    container_name: linkbuilder-node
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - node_modules:/var/www/html/node_modules
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    profiles:
+      - dev
+    networks:
+      - linkbuilder
+
+volumes:
+  db-data:
+    driver: local
+  redis-data:
+    driver: local
+  node_modules:
+    driver: local
+
+networks:
+  linkbuilder:
+    driver: bridge
