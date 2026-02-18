@@ -1,8 +1,18 @@
 # =============================================================================
-# Stage 0: Composer deps (para tener vendor disponible para Ziggy)
+# Stage 0: Composer deps (con extensiones mínimas)
 # =============================================================================
-FROM composer:2 AS vendor-builder
+FROM php:8.3-cli-alpine AS vendor-builder
 WORKDIR /app
+
+# deps para composer + extensiones comunes en Laravel
+RUN apk add --no-cache \
+    git unzip zip icu-dev oniguruma-dev libzip-dev \
+    $PHPIZE_DEPS \
+  && docker-php-ext-install intl mbstring zip
+
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --prefer-dist --no-interaction --no-progress
 
