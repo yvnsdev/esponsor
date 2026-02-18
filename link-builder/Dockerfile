@@ -14,7 +14,7 @@ RUN apk add --no-cache \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --prefer-dist --no-interaction --no-progress
+RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --no-scripts
 
 # =============================================================================
 # Stage 1: Build frontend assets (Node.js)
