@@ -1,4 +1,12 @@
 # =============================================================================
+# Stage 0: Composer deps (para tener vendor disponible para Ziggy)
+# =============================================================================
+FROM composer:2 AS vendor-builder
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --prefer-dist --no-interaction --no-progress
+
+# =============================================================================
 # Stage 1: Build frontend assets (Node.js)
 # =============================================================================
 FROM node:20-alpine AS node-builder
@@ -17,7 +25,7 @@ COPY postcss.config.js ./
 COPY tailwind.config.js ./
 COPY jsconfig.json ./
 # Ziggy is imported from vendor in app.js
-COPY vendor/tightenco/ziggy ./vendor/tightenco/ziggy
+COPY --from=vendor-builder /app/vendor/tightenco/ziggy ./vendor/tightenco/ziggy
 
 # Build assets
 RUN npm run build
